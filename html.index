@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solana Boost Radar</title>
+
+<style>
+
+body{
+margin:0;
+background:#05070b;
+font-family:system-ui;
+color:white;
+}
+
+/* HEADER */
+
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:22px;
+background:#0c1016;
+border-bottom:1px solid #111;
+}
+
+/* LOGO */
+
+.logoImg{
+height:110px;
+filter:drop-shadow(0 0 25px rgba(0,255,163,0.9));
+animation:logoFloat 4s ease-in-out infinite;
+}
+
+@keyframes logoFloat{
+0%{transform:translateY(0)}
+50%{transform:translateY(-4px)}
+100%{transform:translateY(0)}
+}
+
+/* BUTTON */
+
+.refresh{
+background:#00ffa3;
+border:none;
+padding:8px 14px;
+border-radius:6px;
+font-weight:700;
+cursor:pointer;
+box-shadow:0 0 12px rgba(0,255,163,0.6);
+}
+
+/* TERMINAL */
+
+.terminal{
+margin:12px;
+border:1px solid #00ffa3;
+border-radius:12px;
+background:#010204;
+font-size:12px;
+font-family:monospace;
+padding:14px;
+height:200px;
+overflow-y:auto;
+box-shadow:0 0 30px rgba(0,255,163,0.25);
+}
+
+.terminalLine{
+margin-bottom:6px;
+}
+
+.label{
+font-weight:900;
+margin-right:8px;
+min-width:80px;
+display:inline-block;
+}
+
+.agent{color:#c084ff}
+.scan{color:#00eaff}
+.market{color:#ffd54f}
+.signal{color:#00ffa3}
+.system{color:#ff5a5a}
+.alert{color:#ff0033;font-weight:900}
+
+.cursor{
+display:inline-block;
+width:7px;
+height:13px;
+background:#00ffa3;
+margin-left:4px;
+animation:blink 1s infinite;
+}
+
+@keyframes blink{50%{opacity:0}}
+
+/* SECTIONS */
+
+.section{padding:12px;}
+.sectionTitle{font-size:26px;font-weight:900;margin-bottom:12px;}
+
+/* GRID */
+
+.grid{
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+/* CARD */
+
+.card{
+display:flex;
+align-items:center;
+gap:14px;
+padding:18px;
+border-radius:16px;
+background:linear-gradient(160deg,#0c1117,#070b10);
+border:1px solid #1a2532;
+}
+
+.boostCard{border:1px solid #00ffa3;}
+.trendCard{border:1px solid #d4af37;}
+
+.logo{
+width:50px;
+height:50px;
+border-radius:50%;
+}
+
+.info{flex:1;}
+.symbol{font-weight:900;font-size:20px;}
+.price{color:#00ffa3;font-weight:700;}
+.meta{font-size:12px;opacity:0.8;}
+.stars{margin-top:6px;color:#00ffa3;}
+.change{font-size:18px;font-weight:800;margin-top:6px;}
+
+.up{color:#00ffa3}
+.down{color:#ff4d4d}
+
+.dexBtn{
+background:#3ab8ff;
+color:white;
+padding:6px 10px;
+border-radius:6px;
+text-decoration:none;
+font-size:12px;
+}
+
+.placeholder{
+height:100px;
+border-radius:16px;
+background:linear-gradient(90deg,#0c1117,#121a24,#0c1117);
+background-size:200% 100%;
+animation:loading 1.2s infinite;
+}
+
+@keyframes loading{
+0%{background-position:200% 0}
+100%{background-position:-200% 0}
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<img src="https://i.postimg.cc/W3xNvPNZ/Chat_GPT_dd13_mar_2026_20_43_41.png" class="logoImg">
+<button class="refresh" onclick="loadRadar()">REFRESH</button>
+</header>
+
+<div id="terminal" class="terminal"></div>
+
+<div class="section">
+<div class="sectionTitle">🚀 BOOSTED</div>
+<div id="boost" class="grid"></div>
+</div>
+
+<div class="section">
+<div class="sectionTitle">✨ TRENDING</div>
+<div id="trend" class="grid"></div>
+</div>
+
+<script>
+
+/* TERMINAL ENGINE */
+
+const terminal=document.getElementById("terminal")
+let queue=[],typing=false,memory=[],lastType=null
+
+function createLine(type){
+const line=document.createElement("div")
+line.className="terminalLine"
+
+const label=document.createElement("span")
+label.className="label "+type
+label.textContent=type.toUpperCase()+" >"
+
+const text=document.createElement("span")
+const cursor=document.createElement("span")
+cursor.className="cursor"
+
+line.appendChild(label)
+line.appendChild(text)
+line.appendChild(cursor)
+
+terminal.appendChild(line)
+terminal.scrollTop=terminal.scrollHeight
+
+return {text,cursor}
+}
+
+async function typeLine(msg,type){
+typing=true
+const {text,cursor}=createLine(type)
+
+for(let c of msg){
+text.textContent+=c
+await new Promise(r=>setTimeout(r,12+Math.random()*18))
+}
+
+cursor.remove()
+typing=false
+processQueue()
+}
+
+function processQueue(){
+if(queue.length && !typing){
+const n=queue.shift()
+typeLine(n.msg,n.type)
+}
+}
+
+function log(msg,type="system"){
+if(memory.includes(msg)) return
+memory.push(msg)
+if(memory.length>30) memory.shift()
+queue.push({msg,type})
+processQueue()
+}
+
+/* AI LOOP */
+
+const brain={
+agent:["mapping liquidity flows","tracking boost velocity","analyzing momentum"],
+scan:["scanning dex streams","indexing tokens","watching trades"],
+market:["detecting pressure","tracking sentiment","monitoring rotation"]
+}
+
+setInterval(()=>{
+const types=["agent","scan","market"]
+let t
+do{t=types[Math.floor(Math.random()*types.length)]}while(t===lastType)
+lastType=t
+const msg=brain[t][Math.floor(Math.random()*brain[t].length)]
+log(msg,t)
+},2200)
+
+/* FORMAT */
+
+function formatMCAP(v){
+if(v>=1e6)return (v/1e6).toFixed(1)+"M"
+if(v>=1e3)return Math.round(v/1e3)+"K"
+return Math.round(v)
+}
+
+function boostStars(a){
+let s=Math.min(5,Math.ceil(a/50))
+return `${"⭐".repeat(s)} <span>${a}</span>`
+}
+
+/* PLACEHOLDERS */
+
+function showPlaceholders(){
+const ph=`<div class="placeholder"></div>`
+boost.innerHTML=ph+ph+ph
+trend.innerHTML=ph+ph+ph
+}
+
+/* RADAR */
+
+async function loadRadar(){
+
+showPlaceholders()
+log("fetching boost data","scan")
+
+const res=await fetch("https://api.dexscreener.com/token-boosts/latest/v1")
+const boosts=await res.json()
+
+const sol=boosts.filter(t=>t.chainId==="solana").slice(0,20)
+
+const data=await Promise.all(sol.map(t=>
+fetch(`https://api.dexscreener.com/latest/dex/tokens/${t.tokenAddress}`)
+.then(r=>r.json())
+.then(d=>({d,boost:t}))
+))
+
+data.sort((a,b)=>b.boost.amount-a.boost.amount)
+
+const used=new Set()
+let boostHTML="",trendHTML=""
+
+data.forEach(({d,boost})=>{
+const p=d.pairs?.[0]
+if(!p) return
+if(p.fdv<50000) return
+if(used.has(p.baseToken.address)) return
+
+used.add(p.baseToken.address)
+
+log("signal detected → "+p.baseToken.symbol+" boost "+boost.amount,"signal")
+
+if(boost.amount>150){
+log("high boost alert → "+p.baseToken.symbol,"alert")
+}
+
+const card=`
+<div class="card ${p.fdv>100000?'trendCard':'boostCard'}">
+<img class="logo" src="${p.info?.imageUrl || 'https://via.placeholder.com/40'}">
+<div class="info">
+<div class="symbol">${p.baseToken.symbol}</div>
+<div class="price">$${Number(p.priceUsd).toFixed(6)}</div>
+<div class="meta">MCAP $${formatMCAP(p.fdv)}</div>
+<div class="stars">${boostStars(boost.amount)}</div>
+<div class="change ${(p.priceChange?.m5||0)>=0?'up':'down'}">
+${(p.priceChange?.m5||0).toFixed(2)}%
+</div>
+</div>
+<a href="${p.url}" target="_blank" class="dexBtn">DEX</a>
+</div>
+`
+
+if(p.fdv>100000){
+trendHTML+=card
+}else{
+boostHTML+=card
+}
+
+})
+
+boost.innerHTML=boostHTML
+trend.innerHTML=trendHTML
+
+log("radar updated","system")
+
+}
+
+loadRadar()
+setInterval(loadRadar,20000)
+
+</script>
+
+</body>
+</html>
